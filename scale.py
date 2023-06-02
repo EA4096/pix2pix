@@ -13,22 +13,7 @@ def scale_M(init_points,
               a = 2.5*np.log10(2.718281)
              ):
     
-    def KS_loss(soft,
-            offset,
-            boffset=boffset,
-            bsoften=bsoften,
-            M_crop=M_crop,
-            P_crop=P_crop,
-            a = 2.5*np.log10(2.718281)
-            ):
-    
-        M_scaled = a * np.arcsinh((M_crop - offset * boffset) / (soft * bsoften * np.sqrt(a)))
-        MKL = np.histogram(M_scaled, density=True, bins=100)[0] + 1e-12
-        PKL = np.histogram(P_crop, density=True, bins=100)[0] + 1e-12
-
-        return -ks_2samp(MKL, PKL).statistic
-    
-    def my_loss(soft,
+    def MSE_loss(soft,
             offset,
             boffset=boffset,
             bsoften=bsoften,
@@ -40,9 +25,7 @@ def scale_M(init_points,
         M_scaled = a * np.arcsinh((M_crop - offset * boffset) / (soft * bsoften * np.sqrt(a)))
         
         mse = np.sqrt(np.sum((M_scaled - P_crop)**2))
-#         numerator = np.sum((M_scaled - np.mean(M_scaled))*(P_crop - np.mean(P_crop)))
-#         denominator = np.sqrt(np.sum((M_scaled - np.mean(M_scaled))**2)*np.sum((P_crop - np.mean(P_crop))**2))
-        
+
         return -mse
     
     pbounds = {'soft': (1e-6, 2),
@@ -51,7 +34,7 @@ def scale_M(init_points,
     
     optimizer = BayesianOptimization(
         
-        f=my_loss, 
+        f=MSE_loss, 
         pbounds=pbounds,
         random_state=1,
         verbose=False
